@@ -58,11 +58,8 @@ def readDepList(filter_id, user, passwd):
     global jira_url
 
     jac = JIRA(server=jira_url, basic_auth=(user, passwd))
-    print(jac)
     filter_query = jac.filter(filter_id)
-    print(filter_query)
     results = jac.search_issues(filter_query.jql)
-    print(results)
 
     depList = []
     for result in results:
@@ -75,7 +72,7 @@ def readDepList(filter_id, user, passwd):
             # Append if the field is blank
             depList.append(jira_url + 'browse/' + result.key + ' - ' + result.fields.summary)
 
-    return depList
+    return depList.sort()
 
 
 # This function loops through the deploy list created by either function above and
@@ -176,9 +173,6 @@ if __name__ == "__main__":
         config = readConfig()
         if config is False:
             config = writeConfig()
-
-        print(args.filter)
-        print(args.list)
 
         if args.filter:
             depList = readDepList(args.filter, config['jira_user'], config['jira_pass'])
