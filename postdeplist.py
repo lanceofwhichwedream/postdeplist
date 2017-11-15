@@ -100,14 +100,7 @@ def postToFD(post, user, passwd):
 
 # Read config file
 def readConfig():
-    if 'APPDATA' in os.environ:
-        configpath = os.path.join(os.environ['APPDATA'], 'icgdeplist.cfg')
-    elif 'XDG_CONFIG_HOME' in os.environ:
-        configpath = os.path.join(
-            os.environ['XDG_CONFIG_HOME'], 'icgdeplist.cfg')
-    else:
-        configpath = os.path.join(
-            os.environ['HOME'], '.config', 'icgdeplist.cfg')
+    configpath = getConfigPath()
 
     config = configparser.RawConfigParser()
     config.read(configpath)
@@ -116,6 +109,7 @@ def readConfig():
         return False
 
     appconfig = {}
+    
     appconfig['fd_user'] = config.get('fd', 'username')
     appconfig['fd_pass'] = config.get('fd', 'password')
 
@@ -142,25 +136,34 @@ def writeConfig():
     config.set('jira', 'username', jira_username)
     config.set('jira', 'password', jira_password)
 
-    if 'APPDATA' in os.environ:
-        configpath = os.path.join(os.environ['APPDATA'], 'icgdeplist.cfg')
-    elif 'XDG_CONFIG_HOME' in os.environ:
-        configpath = os.path.join(
-            os.environ['XDG_CONFIG_HOME'], 'icgdeplist.cfg')
-    else:
-        configpath = os.path.join(
-            os.environ['HOME'], '.config', 'icgdeplist.cfg')
+    configpath = getConfigPath()
 
     with open(configpath, 'w') as configfile:
         config.write(configfile)
 
     appconfig = {}
+
     appconfig['fd_user'] = fd_username
     appconfig['fd_pass'] = fd_password
+
     appconfig['jira_user'] = jira_username
     appconfig['jira_pass'] = jira_password
 
     return appconfig
+
+
+# Determine configuration file path for current OS (should work on Win/Mac/Linux)
+def getConfigPath():
+    if 'APPDATA' in os.environ:
+        path = os.path.join(os.environ['APPDATA'], 'icgdeplist.cfg')
+    elif 'XDG_CONFIG_HOME' in os.environ:
+        path = os.path.join(
+            os.environ['XDG_CONFIG_HOME'], 'icgdeplist.cfg')
+    else:
+        path = os.path.join(
+            os.environ['HOME'], '.config', 'icgdeplist.cfg')
+
+    return path
 
 
 if __name__ == "__main__":
