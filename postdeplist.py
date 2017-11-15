@@ -184,12 +184,13 @@ if __name__ == "__main__":
             processList(depList, config)
 
     else:
-        print("Usage: ", sys.argv[0], "[-f | --filter <filter id>] [-l | --list <deploylist.txt>]")
-        print("\n")  # Empty line
-        print("<filter_id> is a JIRA filter ID from the Deploy List link.")
-        print("\n")
-        print("<deploylist.txt> is any text file containg one or more deploy items,")
-        print("separated by a single empty line or '--'' on a line by itself.")
-        print("\n")
+        usage = '''[-f | --filter <filter id>] [-l | --list <deploylist.txt>]
 
+        <filter_id> is a JIRA filter ID from the Deploy List link.
+
+        <deploylist.txt> is any text file containg one or more deploy items,
+        separated by a single empty line or '--'' on a line by itself.
+        '''
+
+        print("Usage: ", sys.argv[0], usage)
         quit(1)
