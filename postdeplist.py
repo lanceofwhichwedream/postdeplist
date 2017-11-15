@@ -1,25 +1,39 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 import requests
 import base64
 import sys
 import os
-
-try:
-    import ConfigParser as configparser
-except:
-    import configparser
-
+import configparser
+import argparse
+from jira import JIRA
+from datetime import datetime, date
+from getpass import getpass
 '''
-Simple program to post list of Deploys from text file into
-Deployment flow of Flowdock
+Simple application to post deploys list to Flowdock.
+
+Works with a plain text file, and a JIRA filter ID.
+
+REQUIRES Python3, will not function with Python 2.x.
 
 Author: Chris Gatewood <chris.gatewood@icg360.com>
 '''
 
+__AUTHOR__ = 'Chris Gatewood <chris.gatewood@icg360.com>'
+
+# ##### VARIABLES ##### #
+
+# SET THE FLOW HERE TO WHATEVER FLOW WE'RE POSTING THIS LIST TO
+flow = "test"
+
+# SET THE URL FOR JIRA
+jira_url = 'https://icg360.atlassian.net/'
+
+#########################
+
 
 # Reads DEP list from file and returns list to be iterated through
-def readList(depFile):
+def readFileList(depFile):
     depList = []  # Initialize a blank list
     depLines = ""  # Initialize blank string
 
@@ -39,8 +53,42 @@ def readList(depFile):
     return depList
 
 
+# Reads DEP list from JIRA and returns the list to be iterated through
+def readDepList(filter_id, user, passwd):
+    global jira_url
+
+    jac = JIRA(server=jira_url, basic_auth=(user, passwd))
+    print(jac)
+    filter_query = jac.filter(filter_id)
+    print(filter_query)
+    results = jac.search_issues(filter_query.jql)
+    print(results)
+
+    depList = []
+    for result in results:
+        if result.fields.customfield_10305:
+            dep_date = datetime.strptime(result.fields.customfield_10305, "%Y-%m-%dT%H:%M:%S.%f%z")
+            if dep_date.date() == date.today():
+                # Append if the field is not blank and contains today's date
+                depList.append(jira_url + 'browse/' + result.key + ' - ' + result.fields.summary)
+        else:
+            # Append if the field is blank
+            depList.append(jira_url + 'browse/' + result.key + ' - ' + result.fields.summary)
+
+    return depList
+
+
+# This function loops through the deploy list created by either function above and
+# pushes to Flowdock returning the response code.
+def processList(depList, config):
+    for dep in depList:
+        postToFD(dep, config['fd_user'], config['fd_pass'])
+
+
 # Posts the DEP list that was read in via iteration
-def postList(depList, user, passwd, flow):
+def postToFD(post, user, passwd):
+    global flow
+
     userpass = user + ":" + passwd  # Holds user + pass in Basic Auth format
     url = "https://api.flowdock.com/flows/icg/" + flow + "/messages"
     headers = {
@@ -48,10 +96,9 @@ def postList(depList, user, passwd, flow):
         "Content-Type": "application/json"
     }
 
-    for dep in depList:
-        payload = {"event": "message", "content": dep}
-        resp = requests.post(url, headers=headers, json=payload)
-        print(resp)
+    payload = {"event": "message", "content": post}
+    resp = requests.post(url, headers=headers, json=payload)
+    print(resp)
 
 
 # Read config file
@@ -72,27 +119,31 @@ def readConfig():
         return False
 
     appconfig = {}
-    appconfig['user'] = config.get('general', 'username')
-    appconfig['pass'] = config.get('general', 'password')
+    appconfig['fd_user'] = config.get('fd', 'username')
+    appconfig['fd_pass'] = config.get('fd', 'password')
+
+    appconfig['jira_user'] = config.get('jira', 'username')
+    appconfig['jira_pass'] = config.get('jira', 'password')
 
     return appconfig
 
 
 def writeConfig():
-    try:
-        username = raw_input('Please enter your Flowdock username: ')
-    except NameError:
-        username = input('Please enter your Flowdock username: ')
+    fd_username = input('Please enter your Flowdock username: ')
+    fd_password = getpass('Please enter your Flowdock password: ')
 
-    try:
-        password = raw_input('Please enter your Flowdock password: ')
-    except NameError:
-        password = password('Please enter your Flowdock password: ')
+    jira_username = input('Please enter your JIRA username: ')
+    jira_password = getpass('Please enter your JIRA password: ')
 
     config = configparser.RawConfigParser()
-    config.add_section('general')
-    config.set('general', 'username', username)
-    config.set('general', 'password', password)
+
+    config.add_section('fd')
+    config.set('fd', 'username', fd_username)
+    config.set('fd', 'password', fd_password)
+
+    config.add_section('jira')
+    config.set('jira', 'username', jira_username)
+    config.set('jira', 'password', jira_password)
 
     if 'APPDATA' in os.environ:
         configpath = os.path.join(os.environ['APPDATA'], 'icgdeplist.cfg')
@@ -107,28 +158,44 @@ def writeConfig():
         config.write(configfile)
 
     appconfig = {}
-    appconfig['user'] = username
-    appconfig['pass'] = password
+    appconfig['fd_user'] = fd_username
+    appconfig['fd_pass'] = fd_password
+    appconfig['jira_user'] = jira_username
+    appconfig['jira_pass'] = jira_password
 
     return appconfig
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-f', '--filter', help='JIRA Filter ID')
+    parser.add_argument('-l', '--list', help='Deploy List Text file.\nEntries separated by "--" or empty lines')
+    args = parser.parse_args()
 
-    # SET THE FLOW HERE TO WHATEVER FLOW WE'RE POSTING THIS LIST TO
-    flow = "test"
-    ###################################
-
-    if len(sys.argv) == 2:
+    if args.filter or args.list:
         config = readConfig()
         if config is False:
             config = writeConfig()
 
-        depList = readList(sys.argv[1])
-        postList(depList, config['user'], config['pass'], flow)
+        print(args.filter)
+        print(args.list)
+
+        if args.filter:
+            depList = readDepList(args.filter, config['jira_user'], config['jira_pass'])
+
+        if args.list:
+            depList = readFileList(args.list)
+
+        if depList is not False:
+            processList(depList, config)
 
     else:
-        print("Usage: ", sys.argv[0], "<deploylist.txt>")
-        print("\n<deploylist.txt> is any text file containg one or more deploy items,")
-        print("separated by a single empty line or -- on a line by itself.")
+        print("Usage: ", sys.argv[0], "[-f | --filter <filter id>] [-l | --list <deploylist.txt>]")
+        print("\n")  # Empty line
+        print("<filter_id> is a JIRA filter ID from the Deploy List link.")
+        print("\n")
+        print("<deploylist.txt> is any text file containg one or more deploy items,")
+        print("separated by a single empty line or '--'' on a line by itself.")
+        print("\n")
+
         quit(1)
