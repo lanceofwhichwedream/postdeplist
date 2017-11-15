@@ -72,7 +72,7 @@ def readDepList(filter_id, user, passwd):
             # Append if the field is blank
             depList.append(jira_url + 'browse/' + result.key + ' - ' + result.fields.summary)
 
-    return depList.sort()
+    return sorted(depList)
 
 
 # This function loops through the deploy list created by either function above and
