@@ -9,6 +9,7 @@ import argparse
 from jira import JIRA
 from datetime import datetime, date
 from getpass import getpass
+
 '''
 Simple application to post deploys list to Flowdock.
 
@@ -109,7 +110,7 @@ def readConfig():
         return False
 
     appconfig = {}
-    
+
     appconfig['fd_user'] = config.get('fd', 'username')
     appconfig['fd_pass'] = config.get('fd', 'password')
 
@@ -196,4 +197,4 @@ if __name__ == "__main__":
         '''
 
         print("Usage: ", sys.argv[0], usage)
-        quit(1)
+        sys.exit(1)
