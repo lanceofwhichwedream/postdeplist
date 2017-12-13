@@ -66,7 +66,7 @@ def readDepList(filter_id, user, passwd):
     for result in results:
         if result.fields.customfield_10305:
             dep_date = datetime.strptime(result.fields.customfield_10305, "%Y-%m-%dT%H:%M:%S.%f%z")
-            if dep_date.date() == date.today():
+            if dep_date.date() == date.today() and dep_date.hour == 21:
                 # Append if the field is not blank and contains today's date
                 depList.append(jira_url + 'browse/' + result.key + ' - ' + result.fields.summary)
         else:
