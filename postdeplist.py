@@ -26,6 +26,7 @@ __AUTHOR__ = 'Chris Gatewood <chris.gatewood@icg360.com>'
 
 # SET THE FLOW HERE TO WHATEVER FLOW WE'RE POSTING THIS LIST TO
 flow = "test"
+username = "TeamAwesome"
 
 # SET THE URL FOR JIRA
 jira_url = 'https://icg360.atlassian.net/'
@@ -85,7 +86,7 @@ def processList(depList, config):
 
 # Posts the DEP list that was read in via iteration
 def postToFD(post, user, passwd):
-    global flow
+    global flow, username
 
     userpass = user + ":" + passwd  # Holds user + pass in Basic Auth format
     url = "https://api.flowdock.com/flows/icg/" + flow + "/messages"
@@ -94,7 +95,10 @@ def postToFD(post, user, passwd):
         "Content-Type": "application/json"
     }
 
-    payload = {"event": "message", "content": post}
+    post = post + "\n" date.strftime(date.today(), "#%b_%d_deploy").lower()
+
+    payload = {"event": "message", "content": post, external_user_name: username}
+
     resp = requests.post(url, headers=headers, json=payload)
     print(resp)
 
