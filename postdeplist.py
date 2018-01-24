@@ -95,9 +95,9 @@ def postToFD(post, user, passwd):
         "Content-Type": "application/json"
     }
 
-    post = post + "\n" date.strftime(date.today(), "#%b_%d_deploy").lower()
+    post = post + "  " + date.strftime(date.today(), "#%b_%d_deploy").lower()
 
-    payload = {"event": "message", "content": post, external_user_name: username}
+    payload = {"event": "message", "content": post, "external_user_name": username}
 
     resp = requests.post(url, headers=headers, json=payload)
     print(resp)
