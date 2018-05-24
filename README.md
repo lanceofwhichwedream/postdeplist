@@ -13,9 +13,10 @@ Required Modules:
 - JIRA (`pip install jira`)
 
 Usage:
-	`./postdeplist [-f | --filter \<filter id\>] [-l | --list \<deploylist.txt\>]`
 
-	<filter_id> is a JIRA filter ID from the Deploy List link.
+	./postdeplist [-f | --filter \<filter id\>] [-l | --list \<deploylist.txt\>]
 
-	<deploylist.txt> is any text file containg one or more deploy items,
+	Where <filter_id> is a JIRA filter ID from the Deploy List link.
+
+	Where <deploylist.txt> is any text file containg one or more deploy items,
 	separated by a single empty line or '--'' on a line by itself.
