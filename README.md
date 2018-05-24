@@ -3,7 +3,17 @@ Easy deployment list posting to deployment flow
 
 REQUIRES Python 3.2+, Python 2.x will not work.
 
-Usage: ./postdeplist [-f | --filter \<filter id\>] [-l | --list \<deploylist.txt\>]
+Installation of required Python modules:
+
+	pip install -r requirements.txt
+
+Required Modules:
+
+- Requests (`pip install requests`)
+- JIRA (`pip install jira`)
+
+Usage:
+	`./postdeplist [-f | --filter \<filter id\>] [-l | --list \<deploylist.txt\>]`
 
 	<filter_id> is a JIRA filter ID from the Deploy List link.
 
