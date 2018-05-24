@@ -25,8 +25,8 @@ __AUTHOR__ = 'Chris Gatewood <chris.gatewood@icg360.com>'
 # ##### VARIABLES ##### #
 
 # SET THE FLOW HERE TO WHATEVER FLOW WE'RE POSTING THIS LIST TO
-flow = "test"
-username = "TeamAwesome"
+flow = "deployment"
+username = "Operations_Team"
 
 # SET THE URL FOR JIRA
 jira_url = 'https://icg360.atlassian.net/'
@@ -78,21 +78,25 @@ def readDepList(filter_id, user, passwd):
 
   depList = []
   for result in results:
-    # Looks at the "Deploy Time" field to filter deploys that do not happen
-    # at 9PM Eastern
-    if result.fields.customfield_10305:
-      dep_date = datetime.strptime(result.fields.customfield_10305,
-        "%Y-%m-%dT%H:%M:%S.%f%z")
+    try:
+      # Looks at the "Deploy Time" field to filter deploys from the list that
+      # do not happen at 9PM Eastern on the current day
+      if result.fields.customfield_10305:
+        dep_date = datetime.strptime(result.fields.customfield_10305,
+          "%Y-%m-%dT%H:%M:%S.%f%z")
 
-      if dep_date.date() == date.today() and dep_date.hour == 21:
-        # Append if the field is not blank and contains today's date and
-        # 9PM ET time
+        if dep_date.date() == date.today() and dep_date.hour == 21:
+          # Append if the field is not blank and contains today's date and
+          # 9PM ET time
+          depList.append(jira_url + 'browse/' + result.key + ' - ' +
+              result.fields.summary)
+      else:
+        # Append if the field is left blank also
         depList.append(jira_url + 'browse/' + result.key + ' - ' +
-            result.fields.summary)
-    else:
-      # Append if the field is left blank also
-      depList.append(jira_url + 'browse/' + result.key + ' - ' +
-        result.fields.summary)
+          result.fields.summary)
+
+    except AttributeError as e:
+      print(e)   # Ignore and print any attribute error thrown for user to see
 
   # Return a sorted list (DBADMIN first, then DEP)
   return sorted(depList)
