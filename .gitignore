@@ -1,3 +1,10 @@
-/__pycache__/*
-/build/*
+/__pycache__
+/build
 /*.spec
+/bin
+/lib
+/share
+/include
+/lib64
+/pyvenv.cfg
+/pip-selfcheck.json
