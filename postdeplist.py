@@ -138,7 +138,7 @@ def postToFD(post, user, passwd):
     "external_user_name": username
     }
 
-  resp = requests.post(url, headers=headers, json=payload)
+  response = requests.post(url, headers=headers, json=payload)
 
   if response.status_code == 201:
     print(post, "-", "Success!")
